@@ -15,8 +15,8 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store} >
       <BrowserRouter>
-        <Suspense>
-          <Routes fallback={<div className='w-full mt-20 text-4xl font-bold flex justify-center'>Loading...</div>}>
+        <Suspense fallback={<div className='w-full mt-20 text-4xl font-bold flex justify-center'>Loading...</div>}>
+          <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/register' element={<Register />} />
             <Route path='/login' element={<Login />} />
