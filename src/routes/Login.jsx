@@ -1,45 +1,45 @@
 import { useFormik } from "formik"
-
-const initialValues = {
-  email: '',
-  password: '',
-}
-
-const validateForm = (values) => {
-  const errors = {};
-
-  if (!values.email) {
-    errors.email = 'Required';
-  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
-    errors.email = 'Invalid email address';
-  }
-
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(values.password)) {
-    errors.password = (<span>
-      Password must contain:
-      <ul>
-        <li className="list-disc ml-4">At least 8 characters</li>
-        <li className="list-disc ml-4">At least 1 lowercase letter</li>
-        <li className="list-disc ml-4">At least 1 uppercase letter</li>
-        <li className="list-disc ml-4">At least 1 digit</li>
-        <li className="list-disc ml-4">At least 1 special character (e.g. !@#$%^&*)</li>
-      </ul>
-    </span>)
-  }
-
-  return errors
-}
-
-const handleFormSubmit = (values) => {
-  console.log(values)
-}
+import { useDispatch, useSelector } from "react-redux"
+import * as Yup from "yup"
+import { loginRequest } from "../app/actions"
+import { useNavigate } from "react-router"
+import { useEffect } from "react"
 
 export default function Login() {
+
+  const userInfo = useSelector((state) => state.user)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (userInfo.sessionToken) {
+      navigate('/')
+    }
+  }, [userInfo])
+
+  const dispatch = useDispatch()
+
+  const initialValues = {
+    email: '',
+    password: '',
+  }
+
+  const validationSchema = Yup.object({
+    email: Yup.string().required('Email is required').email('Invalid Email'),
+    password: Yup.string().required('A password is required.').matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/,
+      "Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character"
+    )
+  })
+
+  const handleFormSubmit = (values) => {
+    console.log(values)
+    dispatch(loginRequest(values))
+  }
 
   const formik = useFormik({
     initialValues,
     onSubmit: handleFormSubmit,
-    validate: validateForm
+    validationSchema
   })
 
   return (
@@ -49,12 +49,12 @@ export default function Login() {
           <h1>Login</h1>
           <div className='flex flex-col items-start w-[480px]'>
             <label htmlFor="email">Email</label>
-            <input className="border-1 rounded-sm p-2 w-full" type="email" name="email" onChange={formik.handleChange} value={formik.values.email} onBlur={formik.handleBlur} />
+            <input className="border-1 rounded-sm p-2 w-full" type="email" {...formik.getFieldProps('email')} />
             {formik.errors.email && formik.touched.email ? <div className="text-sm text-red-500 p-1"> {formik.errors.email} </div> : null}
           </div>
           <div className='flex flex-col items-start w-[480px]'>
             <label htmlFor="password">Password</label>
-            <input className="border-1 rounded-sm p-2 w-full" type="password" name="password" onChange={formik.handleChange} value={formik.values.password} onBlur={formik.handleBlur} />
+            <input className="border-1 rounded-sm p-2 w-full" type="password" {...formik.getFieldProps('password')} />
             {formik.errors.password && formik.touched.password ? <div className="text-sm text-red-500 p-1 whitespace-break-spaces"> {formik.errors.password} </div> : null}
           </div>
           <div className='flex flex-col items-start w-[480px]'>

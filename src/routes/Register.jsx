@@ -1,54 +1,41 @@
 import { useFormik } from "formik"
+import * as Yup from "yup"
+import * as Api from '../api/apis'
+import { useDispatch } from "react-redux"
+import { loginRequest, registerRequest } from "../app/actions"
 
-const initialValues = {
+
+
+export default function Register() {
+
+  const dispatch = useDispatch()
+
+  const initialValues = {
   username: '',
   email: '',
   password: '',
   confirm_password: ''
 }
 
-const validateForm = (values) => {
-  const errors = {};
-  if (!values.username) {
-    errors.username = 'Username Required'
-  }
-
-  if (!values.email) {
-    errors.email = 'Required';
-  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
-    errors.email = 'Invalid email address';
-  }
-
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(values.password)) {
-    errors.password = (<span>
-      Password must contain:
-      <ul>
-        <li className="list-disc ml-4">At least 8 characters</li>
-        <li className="list-disc ml-4">At least 1 lowercase letter</li>
-        <li className="list-disc ml-4">At least 1 uppercase letter</li>
-        <li className="list-disc ml-4">At least 1 digit</li>
-        <li className="list-disc ml-4">At least 1 special character (e.g. !@#$%^&*)</li>
-      </ul>
-    </span>)
-  }
-
-  if (values.password !== values.confirm_password) {
-    errors.confirm_password = 'This field should be same as password'
-  }
-
-  return errors
-}
+const validationSchema = Yup.object({
+  username: Yup.string().required('Username Required'),
+  email: Yup.string().required('Email is required').email('Invalid Email'),
+  password: Yup.string().required('A password is required.').matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/,
+    "Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character"
+  ),
+  confirm_password: Yup.string().required('Enter the same password').oneOf([Yup.ref("password")], 'Password does not match')
+})
 
 const handleFormSubmit = (values) => {
   console.log(values)
+  dispatch(registerRequest(values))
 }
-
-export default function Register() {
 
   const formik = useFormik({
     initialValues,
     onSubmit: handleFormSubmit,
-    validate: validateForm
+    validationSchema
   })
 
   return (
@@ -58,22 +45,22 @@ export default function Register() {
           <h1>Register</h1>
           <div className='flex flex-col items-start w-[480px]'>
             <label htmlFor="username">Username</label>
-            <input className="border-1 rounded-sm p-2 w-full" type="text" name="username" onChange={formik.handleChange} value={formik.values.username} onBlur={formik.handleBlur} />
+            <input className="border-1 rounded-sm p-2 w-full" type="text" {...formik.getFieldProps('username')} />
             {(formik.errors.username && formik.touched.username) ? <div className="text-sm text-red-500 p-1"> {formik.errors.username} </div> : null}
           </div>
           <div className='flex flex-col items-start w-[480px]'>
             <label htmlFor="email">Email</label>
-            <input className="border-1 rounded-sm p-2 w-full" type="email" name="email" onChange={formik.handleChange} value={formik.values.email} onBlur={formik.handleBlur} />
+            <input className="border-1 rounded-sm p-2 w-full" type="email" {...formik.getFieldProps('email')} />
             {formik.errors.email && formik.touched.email ? <div className="text-sm text-red-500 p-1"> {formik.errors.email} </div> : null}
           </div>
           <div className='flex flex-col items-start w-[480px]'>
             <label htmlFor="password">Password</label>
-            <input className="border-1 rounded-sm p-2 w-full" type="password" name="password" onChange={formik.handleChange} value={formik.values.password} onBlur={formik.handleBlur} />
+            <input className="border-1 rounded-sm p-2 w-full" type="password" {...formik.getFieldProps('password')} />
             {formik.errors.password && formik.touched.password ? <div className="text-sm text-red-500 p-1 whitespace-break-spaces"> {formik.errors.password} </div> : null}
           </div>
           <div className='flex flex-col items-start w-[480px]'>
             <label htmlFor="confirm_password">Confirm Password</label>
-            <input className="border-1 rounded-sm p-2 w-full" type="password" name="confirm_password" onChange={formik.handleChange} value={formik.values.confirm_password} onBlur={formik.handleBlur} />
+            <input className="border-1 rounded-sm p-2 w-full" type="password" {...formik.getFieldProps('confirm_password')} />
             {formik.errors.confirm_password && formik.touched.confirm_password ? <div className="text-sm text-red-500 p-1"> {formik.errors.confirm_password} </div> : null}
           </div>
           <div className='flex flex-col items-start w-[480px]'>

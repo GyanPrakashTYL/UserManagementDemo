@@ -3,12 +3,21 @@
  * These are just for testing
  */
 
-import { createHash } from 'node:crypto'
+import { SHA256, enc } from 'crypto-js'
 
-const sha256hash = (password) => createHash('sha256').update(password).digest('base64');
+const savedUserDb = localStorage.getItem('user-db')
+const savedSessionDb = localStorage.getItem('session-db')
 
-const userDb = [];
-const sessionDb = [];
+const userDb = savedUserDb !== '[]' && savedUserDb ? JSON.parse(savedUserDb) : [];
+const sessionDb = savedSessionDb !== '[]' && savedSessionDb ? JSON.parse(savedSessionDb) : [];
+
+// Constant Backup
+
+setInterval(() => {
+    console.log('DB Saved')
+    localStorage.setItem('user-db', JSON.stringify(userDb))
+    localStorage.setItem('session-db', JSON.stringify(sessionDb))
+}, 3000)
 
 export async function registerUser(userInfo) {
     if(userDb.find((user) => user.email === userInfo.email)) {
@@ -26,9 +35,10 @@ export async function registerUser(userInfo) {
             id: userDb.length,
             username: userInfo.username,
             email: userInfo.email,
-            password: sha256hash(userInfo.password),  // Unsalted (Only for testing)
+            password: SHA256(userInfo.password).toString(enc.Base64url),  // Unsalted (Only for testing)
             secret: ''
         })
+        console.log(userDb)
         return {
             success: true,
             message: 'User registered successfully'
@@ -44,20 +54,20 @@ export async function loginUser(email, password) {
             success: false,
             message: 'Account does not exist.'
         }
-    } else if(userInDb.password !== sha256hash(password)) {
+    } else if(userInDb.password !== SHA256(password).toString(enc.Base64url)) {
         return {
             success: false,
             message: 'Invalid Credentials.'
         } 
     } else {
-        const sessionToken = crypto.randomBytes(64).toString('base64url')
+        const sessionToken = crypto.randomUUID().toString('base64url')
 
         sessionDb.push({
             sessionToken,
             userId: userInDb.id
         })
 
-        localStorage.setItem('session-token', sessionToken)
+        console.log(sessionDb)
 
         return {
             success: true,
@@ -78,7 +88,7 @@ export async function getUserInfo(sessionToken) {
         const userId = userSession.userId
         const userInfo = userDb.find((user) => user.id === userId)
 
-        return userInfo
+        return {...userInfo, success: true}
     }
 }
 
@@ -94,6 +104,8 @@ export async function changeUserSecret(sessionToken, newSecret) {
         const userInfo = userDb.find((user) => user.id === userId)
 
         userDb[userId].secret = newSecret
+
+        console.log(userDb)
 
         return {
             success: true,
