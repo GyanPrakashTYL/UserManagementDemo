@@ -83,5 +83,21 @@ export async function getUserInfo(sessionToken) {
 }
 
 export async function changeUserSecret(sessionToken, newSecret) {
-    
+    const userSession = sessionDb.find((session) => session.sessionToken === sessionToken)
+    if(!userSession) {
+        return {
+            success: false,
+            message: 'Invalid session token'
+        }
+    } else {
+        const userId = userSession.userId
+        const userInfo = userDb.find((user) => user.id === userId)
+
+        userDb[userId].secret = newSecret
+
+        return {
+            success: true,
+            message: 'Secret updated successfully'
+        }
+    }
 }
